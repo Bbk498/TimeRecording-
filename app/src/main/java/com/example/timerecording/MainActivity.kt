@@ -50,7 +50,7 @@ class MainActivity : AppCompatActivity() {
             val fragment: Fragment = when (item.itemId) {
                 R.id.nav_home -> HomeFragment()
                 R.id.nav_statistics -> StatisticsFragment()
-                R.id.nav_wallpaper -> WallpaperFragment()
+                R.id.nav_wallpaper -> SettingsFragment()
                 else -> return@setOnItemSelectedListener false
             }
             loadFragment(fragment)

@@ -10,7 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
-class WallpaperFragment : Fragment() {
+class SettingsFragment : Fragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -41,6 +41,12 @@ class WallpaperFragment : Fragment() {
                 actionId = "wallpaper"
             ),
             SettingItem(
+                iconRes = android.R.drawable.ic_menu_save,
+                title = "数据导入与导出",
+                subtitle = "备份或恢复你的项目与计时记录",
+                actionId = "transfer"
+            ),
+            SettingItem(
                 iconRes = android.R.drawable.ic_menu_info_details,
                 title = "关于应用",
                 subtitle = "TimeRecording v1.3",
@@ -60,6 +66,9 @@ class WallpaperFragment : Fragment() {
             when (item.actionId) {
                 "wallpaper" -> {
                     startActivity(Intent(requireContext(), WallpaperSettingsActivity::class.java))
+                }
+                "transfer" -> {
+                    startActivity(Intent(requireContext(), DataTransferActivity::class.java))
                 }
                 "about" -> {
                     startActivity(Intent(requireContext(), AboutActivity::class.java))

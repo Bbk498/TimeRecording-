@@ -391,7 +391,7 @@
           <div class="report-intro__meta">
             <span>版本：1.3</span>
             <span>平台：Android 7.0+</span>
-            <span>更新日期：2026-09-19</span>
+            <span>更新日期：2026-09-21</span>
           </div>
         </div>
       </div>
@@ -417,7 +417,7 @@
         <section id="overview">
           <h2>概述</h2>
           <p>TimeRecording 面向一个具体的日常问题：当你同时在推进多个项目时，很难说清每个项目实际投入了多少时间。应用把"开始、暂停、继续、结束"这一整套计时流程做成了极简的两步操作，自动记录每一次有效的工作时段，再把结果用甘特图和柱状图呈现出来。</p>
-          <p>所有项目与会话数据都保存在本地的 Room 数据库中，不依赖账号，也不上传任何个人数据。应用唯一会访问网络的地方是检查版本更新，且只读取一个公开的版本描述文件。</p>
+          <p>所有项目与会话数据都保存在本地的 Room 数据库中，不依赖账号，也不上传任何个人数据。应用支持将数据导出为 JSON 备份或 CSV 表格，方便迁移与备份。应用唯一会访问网络的地方是检查版本更新，且只读取一个公开的版本描述文件。</p>
           <ul class="feature-list">
             <li><strong>多项目并行计时</strong>每个项目拥有独立的状态机，可同时处于计时状态，互不干扰。</li>
             <li><strong>前台服务保障</strong>计时期间运行前台服务并在通知栏显示状态，降低应用被系统回收导致计时中断的概率。</li>
@@ -425,6 +425,7 @@
             <li><strong>甘特图可视化</strong>统计页以 24 小时为纵轴、每个项目为一列，直观呈现一天的作息分布。</li>
             <li><strong>柱状图统计</strong>详情页按日期聚合每日有效时长，并支持自定义图表颜色。</li>
             <li><strong>壁纸个性化</strong>可从相册选择图片，裁剪后作为应用的全屏背景。</li>
+            <li><strong>数据导入与导出</strong>支持将全部项目与计时记录导出为 JSON 备份或 CSV 表格，并可从文件导入恢复，提供合并与覆盖两种方式。</li>
           </ul>
         </section>
 
@@ -454,7 +455,7 @@
               <tr>
                 <th scope="row">设置页</th>
                 <td data-label="入口">底部导航"设置"</td>
-                <td data-label="主要内容">列表形式的三项功能：更换壁纸、关于应用、检查更新</td>
+                <td data-label="主要内容">列表形式的四项功能：更换壁纸、数据导入与导出、关于应用、检查更新</td>
               </tr>
               <tr>
                 <th scope="row">项目详情页</th>
@@ -465,6 +466,11 @@
                 <th scope="row">壁纸设置页</th>
                 <td data-label="入口">设置页"更换壁纸"</td>
                 <td data-label="主要内容">壁纸预览、从相册选择、清除壁纸</td>
+              </tr>
+              <tr>
+                <th scope="row">数据导入与导出页</th>
+                <td data-label="入口">设置页"数据导入与导出"</td>
+                <td data-label="主要内容">数据概览（项目数、记录数、累计时长）、导出 JSON 备份、导出 CSV 表格、从文件导入</td>
               </tr>
               <tr>
                 <th scope="row">关于应用页</th>
@@ -609,6 +615,41 @@
           </ol>
           <p>点击"清除壁纸"会移除路径记录并清空预览，应用恢复默认的透明背景。壁纸保存在应用私有目录中，其他应用无法直接访问。</p>
 
+          <h3>数据导入与导出</h3>
+          <p>数据导入与导出页面提供数据概览与三种操作。页面顶部显示当前的项目数、计时记录数和累计总时长，帮助用户在导出前确认数据量。</p>
+          <table>
+            <caption>数据操作一览</caption>
+            <thead>
+              <tr>
+                <th scope="col">操作</th>
+                <th scope="col">说明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">导出 JSON 备份</th>
+                <td data-label="说明">通过系统"另存为"对话框选择保存位置，生成包含全部项目与计时记录的完整备份文件，可用于日后恢复数据</td>
+              </tr>
+              <tr>
+                <th scope="row">导出 CSV 表格</th>
+                <td data-label="说明">生成带 BOM 头的 CSV 文件，可用 Excel 或 WPS 直接打开做进一步分析。CSV 不支持回传导入</td>
+              </tr>
+              <tr>
+                <th scope="row">从文件导入</th>
+                <td data-label="说明">通过系统文件选择器选择 JSON 备份或 CSV 文件，自动识别格式。导入时可选"合并"或"覆盖"两种方式</td>
+              </tr>
+            </tbody>
+          </table>
+          <ul>
+            <li><strong>合并模式</strong>保留现有数据，同名项目下的记录会追加到已有项目中。重复记录（开始时间相同）会被自动跳过，不会产生重复数据。</li>
+            <li><strong>覆盖模式</strong>清空现有全部项目与计时记录后，从备份文件完整恢复。该操作不可撤销，执行前会弹出二次确认对话框，并提示当前是否有正在计时的项目会一并丢失。</li>
+          </ul>
+          <div class="callout">
+            <div class="callout__label">备份说明</div>
+            <p>备份文件不包含正在进行的计时状态。导出时若某项目正在计时，该次未结束的计时不会被写入文件，恢复后项目为未开始状态。导入过程中如果出现错误，数据库事务会自动回滚，现有数据不受影响。</p>
+          </div>
+          <p>JSON 备份文件包含应用标识（<code>app: "TimeRecording"</code>）和架构版本号，导入时会校验这些字段以确保文件来源正确。CSV 导入兼容多种日期时间格式与纯毫秒时间戳，时长字段兼容"5400"、"5400秒"等写法。无效条目会被跳过并在确认对话框中显示数量。</p>
+
           <h3>检查更新</h3>
           <p>应用提供自动与手动两种更新检查方式，数据来源是一个公开的版本描述文件，其中包含版本号、版本名称、下载地址和更新日志。</p>
           <ul>
@@ -664,6 +705,17 @@
             <li>点击"确定"保存，柱状图会立即使用新颜色绘制。</li>
           </ol>
 
+          <h3>备份与恢复数据</h3>
+          <ol class="steps">
+            <li>点击底部导航栏的"设置"标签，点击"数据导入与导出"。</li>
+            <li>页面顶部显示当前的数据概览（项目数、记录数、累计时长）。</li>
+            <li>导出备份：点击"导出为 JSON 备份"，在系统"另存为"对话框中选择保存位置，文件名会自动带上时间戳。</li>
+            <li>如需表格分析：点击"导出为 CSV 表格"，生成的文件可用 Excel 或 WPS 直接打开。</li>
+            <li>恢复数据：点击"从文件导入"，在系统文件选择器中选择之前导出的 JSON 备份或 CSV 文件。</li>
+            <li>选择导入方式："合并"会保留现有数据并追加新记录，"覆盖"会清空现有数据后完整恢复。</li>
+            <li>确认前会显示预览信息（新增项目数、导入记录数、跳过重复数），确认后开始导入。</li>
+          </ol>
+
           <h3>查看本文档</h3>
           <ol class="steps">
             <li>点击底部导航栏的"设置"标签。</li>
@@ -690,7 +742,7 @@
               <tr>
                 <th scope="row">UI 层</th>
                 <td data-label="职责">界面渲染与用户交互</td>
-                <td data-label="关键类">HomeFragment、StatisticsFragment、WallpaperFragment、DetailActivity、AboutActivity、WallpaperSettingsActivity、GanttChartView、GanttTimeAxisView</td>
+                <td data-label="关键类">HomeFragment、StatisticsFragment、SettingsFragment、DetailActivity、AboutActivity、WallpaperSettingsActivity、DataTransferActivity、GanttChartView、GanttTimeAxisView、ProjectAdapter、SessionAdapter、SettingsAdapter</td>
               </tr>
               <tr>
                 <th scope="row">ViewModel 层</th>
@@ -704,8 +756,8 @@
               </tr>
               <tr>
                 <th scope="row">数据层</th>
-                <td data-label="职责">Room 数据库、实体与数据访问对象</td>
-                <td data-label="关键类">AppDatabase、ProjectDao、SessionDao、ProjectEntity、SessionEntity</td>
+                <td data-label="职责">Room 数据库、实体、数据访问对象与备份序列化</td>
+                <td data-label="关键类">AppDatabase、ProjectDao、SessionDao、ProjectEntity、SessionEntity、BackupManager、BackupModels</td>
               </tr>
               <tr>
                 <th scope="row">服务层</th>
@@ -716,6 +768,11 @@
                 <th scope="row">工具层</th>
                 <td data-label="职责">版本检查与旧数据迁移</td>
                 <td data-label="关键类">UpdateChecker、DataMigration</td>
+              </tr>
+              <tr>
+                <th scope="row">备份层</th>
+                <td data-label="职责">数据导出与导入的格式转换与校验</td>
+                <td data-label="关键类">BackupManager（JSON/CSV 序列化与解析）、BackupModels（备份文件数据模型）</td>
               </tr>
             </tbody>
           </table>
@@ -792,7 +849,7 @@
               <tr>
                 <th scope="row">Gson</th>
                 <td data-label="版本">2.10.1</td>
-                <td data-label="用途">数据迁移时解析旧版本的 JSON 数据</td>
+                <td data-label="用途">数据迁移与 JSON 备份文件的序列化与解析</td>
               </tr>
               <tr>
                 <th scope="row">OkHttp</th>
@@ -813,6 +870,16 @@
                 <th scope="row">Fragment KTX</th>
                 <td data-label="版本">1.6.2</td>
                 <td data-label="用途">Fragment 管理与 ViewModel 委托</td>
+              </tr>
+              <tr>
+                <th scope="row">ColorPicker</th>
+                <td data-label="版本">0.0.15</td>
+                <td data-label="用途">详情页柱状图的自定义颜色选择器</td>
+              </tr>
+              <tr>
+                <th scope="row">Android-Image-Cropper</th>
+                <td data-label="版本">4.5.0</td>
+                <td data-label="用途">壁纸图片裁剪</td>
               </tr>
             </tbody>
           </table>
@@ -927,12 +994,21 @@
 
           <h3>检查更新失败怎么办？</h3>
           <p>手动检查时若无法连接服务器，会提示"网络异常，无法检查更新，请稍后重试"。请确认设备网络可用后重试。自动检查失败时不会打扰用户，仅在发现新版本时提示。</p>
+
+          <h3>如何备份数据？</h3>
+          <p>进入设置页点击"数据导入与导出"，可选择导出为 JSON 备份或 CSV 表格。JSON 备份是完整备份，包含全部项目与计时记录，可再次导入恢复；CSV 表格适合用 Excel 或 WPS 打开做进一步分析，但不支持回传导入。两种格式的文件名都会自动带上时间戳。</p>
+
+          <h3>导入数据会覆盖现有数据吗？</h3>
+          <p>不一定。导入时提供两种方式："合并"会保留现有数据，同名项目下的记录会追加到已有项目中，重复记录会被自动跳过；"覆盖"会清空现有全部数据后从备份文件完整恢复。覆盖操作不可撤销，执行前会弹出二次确认对话框。如果导入过程中出错，数据库事务会自动回滚，现有数据不受影响。</p>
+
+          <h3>导入时正在计时的项目会怎样？</h3>
+          <p>备份文件不包含正在进行的计时状态，导出时未结束的计时不会被写入文件。如果选择覆盖导入，当前所有正在计时或暂停的项目会被一并清除，包括未结束的计时。合并导入不会影响正在计时的项目的状态。</p>
         </section>
 
       </main>
       <footer>
         <p>TimeRecording v1.3（versionCode 4）— Android 平台项目时间记录与统计应用。</p>
-        <p>文档更新于 2026-09-19，与当前应用版本功能保持一致。</p>
+        <p>文档更新于 2026-09-21，与当前应用版本功能保持一致。</p>
       </footer>
     </div>
   </article>

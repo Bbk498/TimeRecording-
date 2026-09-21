@@ -24,8 +24,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false          // ★ 开启代码压缩和混淆
-            isShrinkResources = false        // ★ 移除无用资源
+            isMinifyEnabled = false          // 代码压缩与混淆：当前关闭
+            isShrinkResources = false        // 无用资源移除：当前关闭
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
