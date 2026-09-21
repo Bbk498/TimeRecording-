@@ -49,7 +49,7 @@ class SettingsFragment : Fragment() {
             SettingItem(
                 iconRes = android.R.drawable.ic_menu_info_details,
                 title = "关于应用",
-                subtitle = "TimeRecording v1.3",
+                subtitle = "TimeRecording",
                 actionId = "about"
             ),
             SettingItem(
