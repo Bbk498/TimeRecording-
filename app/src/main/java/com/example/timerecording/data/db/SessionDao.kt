@@ -17,4 +17,7 @@ interface SessionDao {
 
     @Query("DELETE FROM sessions WHERE projectId = :projectId")
     suspend fun deleteSessionsForProject(projectId: Long)
+
+    @Query("DELETE FROM sessions")
+    suspend fun deleteAll()
 }
