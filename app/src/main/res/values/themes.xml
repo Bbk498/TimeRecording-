@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.TimeRecording" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- 原有内容可能为空，添加下面两行 -->
+        
+    </style>
+
+    <!-- 在 resources 末尾添加透明样式定义 -->
+    <style name="TransparentActionBar" parent="@style/Widget.AppCompat.ActionBar">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="background">@android:color/transparent</item>
+        <item name="android:elevation">0dp</item>
+    </style>
+</resources>

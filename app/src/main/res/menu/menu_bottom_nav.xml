@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_home"
+        android:icon="@android:drawable/ic_menu_agenda"
+        android:title="计时" />
+    <item
+        android:id="@+id/nav_statistics"
+        android:icon="@android:drawable/ic_menu_sort_by_size"
+        android:title="统计" />
+    <item
+        android:id="@+id/nav_wallpaper"
+        android:icon="@android:drawable/ic_menu_preferences"
+        android:title="设置" />
+</menu>
