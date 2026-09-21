@@ -187,18 +187,32 @@ class DataTransferActivity : AppCompatActivity() {
 
     private fun askImportMode(plan: ImportPlan) {
         val formatName = if (plan.format == BackupFormat.JSON) "JSON 备份文件" else "CSV 表格文件"
-        val options = arrayOf(
-            "合并：保留现有数据，同名项目追加记录",
-            "覆盖：清空现有数据后完整恢复"
-        )
+        val sessionCount = plan.projects.sumOf { it.sessions.size }
+        val density = resources.displayMetrics.density
+
+        // AppCompat 的 AlertDialog 中 setMessage 与 setItems 互斥：
+        // 一旦设置 message，AlertController 就不会把选项列表安装到对话框中，
+        // 导致只剩按钮。因此这里用自定义视图承载识别结果，选项由按钮承载。
+        val infoView = TextView(this).apply {
+            text = buildString {
+                append("已识别为 $formatName，包含 ${plan.projects.size} 个项目、$sessionCount 条记录。")
+                append("\n\n")
+                append("合并：保留现有数据，同名项目追加记录")
+                append("\n")
+                append("覆盖：清空现有数据后完整恢复")
+            }
+            textSize = 14f
+            setTextColor(android.graphics.Color.parseColor("#555555"))
+            setLineSpacing(4f * density, 1f)
+            setPadding((24 * density).toInt(), (8 * density).toInt(), (24 * density).toInt(), 0)
+        }
 
         AlertDialog.Builder(this)
             .setTitle("选择导入方式")
-            .setMessage("已识别为 $formatName，包含 ${plan.projects.size} 个项目。")
-            .setItems(options) { _, which ->
-                confirmImport(plan, overwrite = which == 1)
-            }
-            .setNegativeButton("取消", null)
+            .setView(infoView)
+            .setPositiveButton("合并") { _, _ -> confirmImport(plan, overwrite = false) }
+            .setNegativeButton("覆盖") { _, _ -> confirmImport(plan, overwrite = true) }
+            .setNeutralButton("取消", null)
             .show()
     }
 
