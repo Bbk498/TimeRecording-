@@ -6,8 +6,13 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// Set of Material typography styles to start with
+/**
+ * Material 3 排版样式定义
+ *
+ * 定义应用中使用的文字样式，目前自定义了bodyLarge（正文大号）样式。
+ */
 val Typography = Typography(
+    // 正文大号文字样式：默认字体、常规字重、16sp字号、24sp行高
     bodyLarge = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Normal,

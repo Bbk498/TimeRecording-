@@ -24,13 +24,24 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+/**
+ * 数据导入导出 Activity。
+ *
+ * 职责：
+ * - 展示当前数据概览（项目数、会话数、总时长）；
+ * - 支持导出为 JSON 备份或 CSV 表格（通过系统「另存为」选择目标位置）；
+ * - 支持导入 JSON/CSV 文件，提供合并与覆盖两种导入模式；
+ * - 导入前预览变更并二次确认，导入后刷新概览。
+ */
 class DataTransferActivity : AppCompatActivity() {
 
+    // 项目数据仓库（懒加载，全局单例）
     private val repository by lazy { ProjectRepository.get(this) }
 
-    private lateinit var tvProjectCount: TextView
-    private lateinit var tvSessionCount: TextView
-    private lateinit var tvTotalDuration: TextView
+    // 数据概览文本控件
+    private lateinit var tvProjectCount: TextView     // 项目数量
+    private lateinit var tvSessionCount: TextView     // 会话记录数量
+    private lateinit var tvTotalDuration: TextView    // 总时长
 
     /** 导出 JSON：系统「另存为」返回可写 Uri */
     private val createJsonDocument =
@@ -50,26 +61,36 @@ class DataTransferActivity : AppCompatActivity() {
             uri?.let { readImportFile(it) }
         }
 
+    /**
+     * Activity 创建入口：绑定控件、设置按钮监听、刷新数据概览。
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_data_transfer)
 
+        // 为顶部布局添加状态栏高度的 padding
         applyStatusBarPadding()
 
+        // 绑定概览文本控件
         tvProjectCount = findViewById(R.id.tv_project_count)
         tvSessionCount = findViewById(R.id.tv_session_count)
         tvTotalDuration = findViewById(R.id.tv_total_duration)
 
+        // 绑定返回、导出、导入按钮
         findViewById<ImageButton>(R.id.btn_back).setOnClickListener { finish() }
         findViewById<Button>(R.id.btn_export_json).setOnClickListener { startExport(BackupFormat.JSON) }
         findViewById<Button>(R.id.btn_export_csv).setOnClickListener { startExport(BackupFormat.CSV) }
         findViewById<Button>(R.id.btn_import).setOnClickListener { openImportPicker() }
 
+        // 初始刷新数据概览
         refreshOverview()
     }
 
     // ------------------------------------------------------------ 数据概览
 
+    /**
+     * 异步加载所有项目数据，计算并显示项目数、会话数和总时长。
+     */
     private fun refreshOverview() {
         lifecycleScope.launch {
             val projects = withContext(Dispatchers.IO) { repository.getAllProjects() }
@@ -82,6 +103,9 @@ class DataTransferActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 将总秒数格式化为中文可读时长（小时/分/秒）。
+     */
     private fun formatTotalDuration(totalSeconds: Long): String {
         val hours = totalSeconds / 3600
         val minutes = (totalSeconds % 3600) / 60
@@ -94,14 +118,19 @@ class DataTransferActivity : AppCompatActivity() {
 
     // ------------------------------------------------------------ 导出
 
+    /**
+     * 启动导出流程：无数据时提示，否则根据格式唤起系统「另存为」选择器。
+     */
     private fun startExport(format: BackupFormat) {
         lifecycleScope.launch {
+            // 检查是否有数据可导出
             val projectCount = withContext(Dispatchers.IO) { repository.getAllProjects().size }
             if (projectCount == 0) {
                 toast("暂无数据可导出")
                 return@launch
             }
 
+            // 生成带时间戳的文件名并启动对应选择器
             val fileName = buildFileName(format)
             when (format) {
                 BackupFormat.JSON -> createJsonDocument.launch(fileName)
@@ -110,6 +139,9 @@ class DataTransferActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 根据格式和时间戳生成导出文件名。
+     */
     private fun buildFileName(format: BackupFormat): String {
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         return when (format) {
@@ -118,14 +150,20 @@ class DataTransferActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 执行导出写入：在 IO 线程生成导出内容并写入目标 Uri。
+     * 成功或失败时分别弹出提示对话框。
+     */
     private fun writeExport(uri: Uri, format: BackupFormat) {
         lifecycleScope.launch {
             val payload = withContext(Dispatchers.IO) {
                 try {
+                    // 根据格式生成导出内容
                     val exported = when (format) {
                         BackupFormat.JSON -> repository.exportJson()
                         BackupFormat.CSV -> repository.exportCsv()
                     }
+                    // 将内容写入目标 Uri
                     contentResolver.openOutputStream(uri)?.use { output ->
                         output.write(exported.content.toByteArray(Charsets.UTF_8))
                         output.flush()
@@ -136,6 +174,7 @@ class DataTransferActivity : AppCompatActivity() {
                 }
             }
 
+            // 根据结果弹出提示
             if (payload == null) {
                 showAlert("导出失败", "无法写入所选位置，请重试或更换保存位置。")
             } else {
@@ -149,6 +188,9 @@ class DataTransferActivity : AppCompatActivity() {
 
     // ------------------------------------------------------------ 导入
 
+    /**
+     * 打开系统文件选择器，支持 JSON、文本类、通用二进制等 MIME 类型。
+     */
     private fun openImportPicker() {
         openDocument.launch(
             arrayOf(
@@ -159,8 +201,13 @@ class DataTransferActivity : AppCompatActivity() {
         )
     }
 
+    /**
+     * 读取导入文件内容并解析为导入计划。
+     * 读取或解析失败时弹出提示。
+     */
     private fun readImportFile(uri: Uri) {
         lifecycleScope.launch {
+            // IO 线程读取文件文本内容
             val text = withContext(Dispatchers.IO) {
                 try {
                     contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
@@ -174,6 +221,7 @@ class DataTransferActivity : AppCompatActivity() {
                 return@launch
             }
 
+            // 解析文本为导入计划
             val plan = try {
                 BackupManager.parse(text)
             } catch (e: BackupParseException) {
@@ -181,18 +229,24 @@ class DataTransferActivity : AppCompatActivity() {
                 return@launch
             }
 
+            // 解析成功后询问导入模式
             askImportMode(plan)
         }
     }
 
+    /**
+     * 弹出导入模式选择对话框（合并 / 覆盖），展示识别结果摘要。
+     *
+     * AppCompat 的 AlertDialog 中 setMessage 与 setItems 互斥：
+     * 一旦设置 message，AlertController 就不会把选项列表安装到对话框中，
+     * 导致只剩按钮。因此这里用自定义视图承载识别结果，选项由按钮承载。
+     */
     private fun askImportMode(plan: ImportPlan) {
         val formatName = if (plan.format == BackupFormat.JSON) "JSON 备份文件" else "CSV 表格文件"
         val sessionCount = plan.projects.sumOf { it.sessions.size }
         val density = resources.displayMetrics.density
 
-        // AppCompat 的 AlertDialog 中 setMessage 与 setItems 互斥：
-        // 一旦设置 message，AlertController 就不会把选项列表安装到对话框中，
-        // 导致只剩按钮。因此这里用自定义视图承载识别结果，选项由按钮承载。
+        // 用 TextView 承载识别结果说明
         val infoView = TextView(this).apply {
             text = buildString {
                 append("已识别为 $formatName，包含 ${plan.projects.size} 个项目、$sessionCount 条记录。")
@@ -207,6 +261,7 @@ class DataTransferActivity : AppCompatActivity() {
             setPadding((24 * density).toInt(), (8 * density).toInt(), (24 * density).toInt(), 0)
         }
 
+        // 合并 = 追加，覆盖 = 清空后恢复
         AlertDialog.Builder(this)
             .setTitle("选择导入方式")
             .setView(infoView)
@@ -216,11 +271,17 @@ class DataTransferActivity : AppCompatActivity() {
             .show()
     }
 
+    /**
+     * 导入前预览变更：统计新增/已有项目数、导入/跳过记录数，
+     * 覆盖模式下额外提示正在计时的项目数据将丢失。
+     */
     private fun confirmImport(plan: ImportPlan, overwrite: Boolean) {
         lifecycleScope.launch {
+            // 统计当前有计时中或暂停中的项目数（仅覆盖模式需要提示）
             val activeTimerCount = withContext(Dispatchers.IO) {
                 repository.getAllProjects().count { it.state != "idle" }
             }
+            // 预览导入结果（不实际写入）
             val summary = withContext(Dispatchers.IO) {
                 repository.previewImport(plan, overwrite)
             }
@@ -242,6 +303,7 @@ class DataTransferActivity : AppCompatActivity() {
                 }
             }
 
+            // 二次确认后执行实际导入
             AlertDialog.Builder(this@DataTransferActivity)
                 .setTitle(if (overwrite) "确认覆盖导入" else "确认合并导入")
                 .setMessage(message)
@@ -253,6 +315,10 @@ class DataTransferActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 执行实际导入写入，完成后刷新概览并展示结果摘要。
+     * 导入失败时数据已自动回滚。
+     */
     private fun executeImport(plan: ImportPlan, overwrite: Boolean) {
         lifecycleScope.launch {
             val result = withContext(Dispatchers.IO) {
@@ -268,6 +334,7 @@ class DataTransferActivity : AppCompatActivity() {
                 return@launch
             }
 
+            // 导入成功：刷新概览并提示结果
             refreshOverview()
             showAlert(
                 "导入完成",
@@ -279,6 +346,7 @@ class DataTransferActivity : AppCompatActivity() {
 
     // ------------------------------------------------------------ 工具
 
+    /** 为顶部 header 添加状态栏高度的 padding */
     private fun applyStatusBarPadding() {
         val header = findViewById<LinearLayout>(R.id.transfer_header)
         header.setPadding(
@@ -289,6 +357,7 @@ class DataTransferActivity : AppCompatActivity() {
         )
     }
 
+    /** 获取系统状态栏高度（像素），无法获取时回退为 24dp */
     private fun getStatusBarHeight(): Int {
         val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
         return if (resourceId > 0) {
@@ -298,6 +367,9 @@ class DataTransferActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 安全弹出提示对话框：Activity 已销毁或正在销毁时跳过。
+     */
     private fun showAlert(title: String, message: String) {
         if (isFinishing || isDestroyed) return
         AlertDialog.Builder(this)
@@ -307,6 +379,7 @@ class DataTransferActivity : AppCompatActivity() {
             .show()
     }
 
+    /** 显示简短 Toast 提示 */
     private fun toast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }

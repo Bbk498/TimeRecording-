@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>统计图修复方案</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: #f5f5f5;
+    color: #333;
+    line-height: 1.8;
+    padding: 20px;
+  }
+  .container { max-width: 860px; margin: 0 auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+  .header { background: linear-gradient(135deg, #6C5CE7, #a366ff); padding: 32px 40px; color: #fff; }
+  .header h1 { font-size: 26px; margin-bottom: 8px; }
+  .header p { font-size: 14px; opacity: 0.85; }
+  .content { padding: 32px 40px; }
+  h2 { font-size: 20px; margin: 28px 0 16px; padding-bottom: 8px; border-bottom: 2px solid #eee; color: #6C5CE7; }
+  h3 { font-size: 16px; margin: 20px 0 12px; color: #444; }
+  .problem-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 16px 20px; margin: 12px 0; border-radius: 6px; }
+  .fix-box { background: #d4edda; border-left: 4px solid #28a745; padding: 16px 20px; margin: 12px 0; border-radius: 6px; }
+  .label { font-weight: 700; display: inline-block; min-width: 70px; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  th, td { border: 1px solid #ddd; padding: 10px 14px; text-align: center; }
+  th { background: #f8f9fa; font-weight: 600; }
+  .code-block {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 16px 0;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .code-block .k { color: #c9c9c9; }
+  .code-block .c { color: #6a9955; }
+  .code-block .s { color: #ce9178; }
+  .code-block .n { color: #b5cea8; }
+  .code-block .f { color: #dcdcaa; }
+  .code-block .p { color: #9cdcfe; }
+  .code-block .m { color: #4ec9b0; }
+  .summary-box { background: #e8f0fe; border-radius: 8px; padding: 20px 24px; margin: 20px 0; }
+  .summary-box h3 { color: #1a73e8; margin-top: 0; }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+  .badge-warn { background: #fff3cd; color: #856404; }
+  .badge-fix { background: #d4edda; color: #155724; }
+  .badge-del { background: #f8d7da; color: #721c24; }
+  .badge-add { background: #cce5ff; color: #004085; }
+  hr { border: none; border-top: 1px solid #eee; margin: 24px 0; }
+  .footer { padding: 20px 40px 32px; border-top: 1px solid #eee; font-size: 13px; color: #888; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>详情页统计图修复方案</h1>
+    <p>文件：DetailActivity.kt &mdash; setupBarChart() 方法 | 修改范围：Y轴 + X轴 + 柱状图数值格式</p>
+  </div>
+
+  <div class="content">
+
+    <h2>一、问题分析</h2>
+
+    <div class="problem-box">
+      <p><span class="label">问题1：</span>纵坐标无等分线，单位不统一</p>
+      <p style="margin-top:8px;">Y轴未做任何配置，默认显示原始秒数（0~24000），数值标签混用 "h" 和 "s"（如 3.7h、613s），无法直观比较各天差异。</p>
+    </div>
+
+    <div class="problem-box">
+      <p><span class="label">问题2：</span>横坐标日期过长导致重叠</p>
+      <p style="margin-top:8px;">X轴使用完整日期格式 "yyyy-MM-dd"（如 2026-09-10），当数据点较多时日期文字严重重叠。</p>
+    </div>
+
+    <h2>二、修复方案</h2>
+
+    <h3>修复1：纵坐标改为等分线（单位：小时）</h3>
+    <div class="fix-box">
+      <p><span class="badge badge-add">改动</span> 将柱状图数据从"秒"改为"小时"（秒数 / 3600）</p>
+      <p><span class="badge badge-add">改动</span> 配置 axisLeft：6等分线，范围 0 至向上取整的最大值</p>
+      <p><span class="badge badge-del">删除</span> 禁用右侧 axisRight（当前镜像显示无意义）</p>
+      <p><span class="badge badge-fix">修复</span> 柱顶数值统一显示为小时格式（如 3.7h、0.2h）</p>
+    </div>
+
+    <p>等分线范围计算逻辑：</p>
+    <table>
+      <tr><th>步骤</th><th>说明</th><th>示例</th></tr>
+      <tr><td>1. 找最大值</td><td>所有柱数据的最大小时数</td><td>6.2h</td></tr>
+      <tr><td>2. 向上取整</td><td>Math.ceil(maxHours)</td><td>7h</td></tr>
+      <tr><td>3. 设等分线</td><td>axisMinimum=0, axisMaximum=7, labelCount=7</td><td>0, 1, 2, 3, 4, 5, 6, 7</td></tr>
+      <tr><td>4. 特殊处理</td><td>若最大值 < 1h，则按0.5等分</td><td>0, 0.5, 1.0</td></tr>
+    </table>
+
+    <h3>修复2：横坐标日期简化 + 防重叠</h3>
+    <div class="fix-box">
+      <p><span class="badge badge-add">改动</span> 日期格式从 "yyyy-MM-dd" 改为 "MM-dd"（如 09-10）</p>
+      <p><span class="badge badge-add">改动</span> X轴标签旋转 -45&deg;</p>
+      <p><span class="badge badge-add">改动</span> 限制标签数量，最多显示 6 个，自动跳过</p>
+      <p><span class="badge badge-add">改动</span> 启用 setAvoidFirstLastClipping 防止首尾裁剪</p>
+    </div>
+
+    <p>效果对比：</p>
+    <table>
+      <tr><th>数据点数量</th><th>当前显示</th><th>修复后显示</th></tr>
+      <tr><td>8个</td><td>2026-09-10 ~ 2026-09-25（重叠）</td><td>09-10, 09-12, 09-14... （最多6个，-45&deg;旋转）</td></tr>
+      <tr><td>3个</td><td>2026-09-10 ~ 2026-09-12（可能重叠）</td><td>09-10, 09-11, 09-12（全部显示，-45&deg;旋转）</td></tr>
+    </table>
+
+    <hr>
+
+    <h2>三、具体代码改动</h2>
+    <p>修改文件：<code>DetailActivity.kt</code> 中的 <code>setupBarChart()</code> 方法（第209~269行）</p>
+
+    <h3>改动A：数据从秒改为小时（第220~224行）</h3>
+    <div class="code-block"><span class="c">// 修改前：值为秒</span>
+sortedDates.forEachIndexed { index, date ->
+    val millis = dailyMap[date] ?: 0L
+    val seconds = millis / 1000f
+    entries.add(BarEntry(index.toFloat(), seconds))
+}
+
+<span class="c">// 修改后：值改为小时</span>
+sortedDates.forEachIndexed { index, date ->
+    val millis = dailyMap[date] ?: 0L
+    val <span class="p">hours</span> = millis / 1000f / 3600f
+    entries.add(BarEntry(index.toFloat(), <span class="p">hours</span>))
+}</div>
+
+    <h3>改动B：柱顶数值统一为小时格式（第238~246行）</h3>
+    <div class="code-block"><span class="c">// 修改前：混用 h 和 s</span>
+dataSet.valueFormatter = object : ValueFormatter() {
+    override fun getFormattedValue(value: Float): String {
+        return if (value >= 3600) {
+            String.format("%.1fh", value / 3600)
+        } else {
+            String.format("%.0fs", value)
+        }
+    }
+}
+
+<span class="c">// 修改后：统一为小时</span>
+dataSet.valueFormatter = object : ValueFormatter() {
+    override fun getFormattedValue(value: Float): String {
+        <span class="k">return if</span> (value >= 1f) {
+            String.format(<span class="s">"%.1fh"</span>, value)
+        } <span class="k">else</span> {
+            String.format(<span class="s">"%.1fh"</span>, value)  <span class="c">// 0.2h 而非 613s</span>
+        }
+    }
+}</div>
+
+    <h3>改动C：新增 Y轴等分线配置（第248行之后插入）</h3>
+    <div class="code-block"><span class="c">// 新增：Y轴等分线配置</span>
+<span class="k">val</span> maxHours = entries.maxOf { it.y }
+<span class="k">val</span> yAxisMax = <span class="k">if</span> (maxHours >= 1f) {
+    Math.ceil(maxHours.toDouble()).toFloat()  <span class="c">// 6.2h -> 7</span>
+} <span class="k">else if</span> (maxHours > 0f) {
+    (<span class="n">Math.ceil</span>(maxHours * <span class="n">2</span>.toDouble()).toFloat() / <span class="n">2</span>f)  <span class="c">// 0.3h -> 0.5</span>
+} <span class="k">else</span> {
+    <span class="n">1f</span>
+}
+
+<span class="k">val</span> axisLeft = barChart.axisLeft
+axisLeft.axisMinimum = <span class="n">0f</span>
+axisLeft.axisMaximum = yAxisMax
+axisLeft.labelCount = yAxisMax.toInt() + <span class="n">1</span>  <span class="c">// 等分线数量</span>
+axisLeft.setLabelCount(yAxisMax.toInt() + <span class="n">1</span>, <span class="k">true</span>)  <span class="c">// 强制等分</span>
+axisLeft.valueFormatter = <span class="k">object</span> : ValueFormatter() {
+    <span class="k">override fun</span> <span class="f">getFormattedValue</span>(value: Float): String {
+        <span class="k">return</span> String.format(<span class="s">"%.0f"</span>, value)  <span class="c">// 显示 0, 1, 2, 3...</span>
+    }
+}
+axisLeft.setDrawGridLines(<span class="k">true</span>)
+axisLeft.gridColor = <span class="m">Color.LTGRAY</span>
+axisLeft.gridLineWidth = <span class="n">1f</span>
+
+<span class="c">// 禁用右侧Y轴</span>
+barChart.axisRight.isEnabled = <span class="k">false</span>
+
+<span class="c">// 图例隐藏（柱状图只有一个数据集，无需图例）</span>
+barChart.legend.isEnabled = <span class="k">false</span></div>
+
+    <h3>改动D：X轴日期简化 + 旋转（第252~260行替换）</h3>
+    <div class="code-block"><span class="c">// 修改前</span>
+<span class="k">val</span> xAxis = barChart.xAxis
+xAxis.position = XAxis.XAxisPosition.BOTTOM
+xAxis.valueFormatter = IndexAxisValueFormatter(sortedDates)
+xAxis.granularity = <span class="n">1f</span>
+xAxis.labelCount = sortedDates.size
+xAxis.axisMinimum = -<span class="n">0.5f</span>
+<span class="k">if</span> (entries.size < <span class="n">10</span>) {
+    xAxis.axisMaximum = <span class="n">10f</span>
+}
+
+<span class="c">// 修改后</span>
+<span class="c">// 日期格式从 yyyy-MM-dd 改为 MM-dd</span>
+<span class="k">val</span> shortDates = sortedDates.map {
+    <span class="k">val</span> parts = it.split(<span class="s">"-"</span>)
+    <span class="s">"${parts[1]}-${parts[2]}"</span>  <span class="c">// 09-10</span>
+}
+
+<span class="k">val</span> xAxis = barChart.xAxis
+xAxis.position = XAxis.XAxisPosition.BOTTOM
+xAxis.valueFormatter = IndexAxisValueFormatter(shortDates)
+xAxis.granularity = <span class="n">1f</span>
+xAxis.labelCount = <span class="m">minOf</span>(sortedDates.size, <span class="n">6</span>)  <span class="c">// 最多6个标签</span>
+xAxis.axisMinimum = -<span class="n">0.5f</span>
+xAxis.axisMaximum = entries.size.toFloat() - <span class="n">0.5f</span>  <span class="c">// 精确范围</span>
+xAxis.labelRotationAngle = -<span class="n">45f</span>  <span class="c">// 旋转45度防重叠</span>
+xAxis.setAvoidFirstLastClipping(<span class="k">true</span>)</div>
+
+    <div class="summary-box">
+      <h3>改动汇总</h3>
+      <table style="margin:0;">
+        <tr><th>序号</th><th>改动内容</th><th>类型</th><th>影响</th></tr>
+        <tr><td>A</td><td>柱状图数据值从秒改为小时</td><td><span class="badge badge-fix">修改</span></td><td>Y轴刻度自动变为小时范围</td></tr>
+        <tr><td>B</td><td>柱顶数值统一显示小时格式</td><td><span class="badge badge-fix">修改</span></td><td>不再出现 613s，显示 0.2h</td></tr>
+        <tr><td>C</td><td>新增Y轴等分线配置</td><td><span class="badge badge-add">新增</span></td><td>0~7h等分，每天差异一目了然</td></tr>
+        <tr><td>D</td><td>X轴日期简化+旋转+限数</td><td><span class="badge badge-fix">修改</span></td><td>09-10格式，-45&deg;旋转，最多6个标签</td></tr>
+      </table>
+    </div>
+
+    <h2>四、修复效果预览</h2>
+    <table>
+      <tr><th>项目</th><th>修复前</th><th>修复后</th></tr>
+      <tr><td>Y轴范围</td><td>0~24000（秒，无标签）</td><td>0~7（小时，等分线）</td></tr>
+      <tr><td>Y轴刻度</td><td>不均匀，无等分</td><td>0, 1, 2, 3, 4, 5, 6, 7（等分线）</td></tr>
+      <tr><td>右侧Y轴</td><td>镜像显示（冗余）</td><td>已禁用</td></tr>
+      <tr><td>柱顶数值</td><td>3.7h / 613s（混用）</td><td>3.7h / 0.2h（统一）</td></tr>
+      <tr><td>X轴日期</td><td>2026-09-10（重叠）</td><td>09-10（-45&deg;旋转，最多6个）</td></tr>
+      <tr><td>图例</td><td>显示（无意义空图例）</td><td>隐藏</td></tr>
+    </table>
+
+  </div>
+
+  <div class="footer">
+    <p>请审查以上方案，确认后我将按此方案修改 DetailActivity.kt 的 setupBarChart() 方法。</p>
+  </div>
+</div>
+</body>
+</html>

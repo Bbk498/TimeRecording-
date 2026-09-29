@@ -11,12 +11,14 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
+// 深色主题配色方案
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
     secondary = PurpleGrey80,
     tertiary = Pink80
 )
 
+// 浅色主题配色方案
 private val LightColorScheme = lightColorScheme(
     primary = Purple40,
     secondary = PurpleGrey40,
@@ -33,6 +35,15 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
+/**
+ * 应用主题入口
+ *
+ * 根据系统深色模式开关和动态颜色支持情况，选择合适的配色方案并应用。
+ *
+ * @param darkTheme 是否使用深色主题，默认跟随系统设置
+ * @param dynamicColor 是否启用动态取色（Android 12+ Material You），默认开启
+ * @param content 页面内容
+ */
 @Composable
 fun TimeRecordingTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -40,13 +51,17 @@ fun TimeRecordingTheme(
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
+    // 根据条件选择配色方案
     val colorScheme = when {
+        // Android 12+ 支持动态取色，从系统壁纸提取颜色
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
 
+        // 深色模式使用深色配色
         darkTheme -> DarkColorScheme
+        // 浅色模式使用浅色配色
         else -> LightColorScheme
     }
 
