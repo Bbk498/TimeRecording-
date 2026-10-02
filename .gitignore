@@ -71,7 +71,7 @@ release/
 .cursor/
 
 # ---------- 内部开发草稿与演示文件 ----------
-/demo/
+
 /timerecording-docs/
 chart_fix_plan.html
 cross_day_bug_report.html
