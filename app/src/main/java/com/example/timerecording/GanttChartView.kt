@@ -177,9 +177,14 @@ class GanttChartView @JvmOverloads constructor(
             val startHour = startCal.get(Calendar.HOUR_OF_DAY) +
                     startCal.get(Calendar.MINUTE) / 60f +
                     startCal.get(Calendar.SECOND) / 3600f
-            val endHour = endCal.get(Calendar.HOUR_OF_DAY) +
-                    endCal.get(Calendar.MINUTE) / 60f +
-                    endCal.get(Calendar.SECOND) / 3600f
+            // 跨天会话：endTime 在第二天，截断为当天24:00防止矩形坐标反转
+            val endHour = if (!isSameDay(endCal, selectedDate)) {
+                24f
+            } else {
+                endCal.get(Calendar.HOUR_OF_DAY) +
+                endCal.get(Calendar.MINUTE) / 60f +
+                endCal.get(Calendar.SECOND) / 3600f
+            }
 
             // 根据小时值计算色块的上下Y坐标
             val barTop = chartTop + chartHeight * startHour / 24f

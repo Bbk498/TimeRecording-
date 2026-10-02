@@ -132,8 +132,12 @@ class HomeFragment : Fragment(), OnProjectActionListener {
      */
     override fun onResume() {
         super.onResume()
-        // 回到前台时重新检查跨天会话
-        viewModel.checkCrossDaySessions()
+        // 只在日期确实变化时才检查跨天会话，避免每次回前台重复拆分
+        val today = java.util.Calendar.getInstance().get(java.util.Calendar.DAY_OF_YEAR)
+        if (today != lastCheckDay) {
+            lastCheckDay = today
+            viewModel.checkCrossDaySessions()
+        }
         // 若有计时中项目，重启每秒刷新任务
         if (projectList.any { it.state == "running" }) {
             handler.removeCallbacks(updateRunnable)

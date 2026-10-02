@@ -17,6 +17,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * 项目数据仓库，统一封装对数据库的访问，是 ViewModel 与数据层之间的唯一桥梁。
@@ -36,6 +38,7 @@ class ProjectRepository private constructor(
 ) {
     private val projectDao = db.projectDao()  // 项目表 DAO
     private val sessionDao = db.sessionDao()  // 会话表 DAO
+    private val crossDayMutex = Mutex()  // 跨天拆分互斥锁，防止多协程并发重复插入会话
 
     /** 响应式项目数据流，数据变化时自动推送，自动转换为 UI 模型 */
     val projectsFlow: Flow<List<Project>> = projectDao.observeProjectsWithSessions()
@@ -172,12 +175,12 @@ class ProjectRepository private constructor(
      * - running 状态：将昨天到午夜的时长保存为历史会话，然后从午夜零点开始新的计时片段
      * 确保每条会话记录只属于同一天。
      */
-    suspend fun checkAndSplitCrossDaySessions() {
+    suspend fun checkAndSplitCrossDaySessions() = crossDayMutex.withLock {
         val nonIdle = projectDao.getNonIdleProjects()
         val todayStart = getStartOfToday()
 
         for (p in nonIdle) {
-            // 会话开始时间就在今天，无需拆分
+            // 二次检查：如果 sessionStartTime 已在今天，说明已被其他协程拆分过
             if (isSameDay(p.sessionStartTime, todayStart)) continue
 
             when (p.state) {
