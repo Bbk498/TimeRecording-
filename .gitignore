@@ -1,42 +1,27 @@
-*.iml
-.gradle
-/local.properties
-.idea
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-.vscode/
-.settings/
-*.swp
-*.swo
-*.log
-*.tmp
-*.hprof
-.cxx/
-.externalNativeBuild/
-/build
+# ============================================================
+#  TimeRecording — Git 忽略规则
+#  任何「本地环境、构建产物、IDE/工具生成物、临时草稿」都不应进入仓库
+# ============================================================
+
+# ---------- 构建产物 ----------
+.gradle/
 build/
 /app/build/
 /app/release/
 /app/debug/
+/captures
 *.apk
 *.aab
 *.ap_
 *.dex
 *.class
-/captures
-.externalNativeBuild
-.cxx
+*.hprof
+hs_err_pid*.log
+/captures/
+
+# ---------- 本地环境与密钥（绝对不要提交）----------
+/local.properties
 local.properties
-.trae
-.trae-html-share-packages
-google-services.json
-google-services.json.bak
-/docs
 *.jks
 *.keystore
 *.p12
@@ -47,3 +32,62 @@ keystore.properties
 signing.properties
 secrets.properties
 .env
+.env.*
+google-services.json
+google-services.json.bak
+
+# 机器相关的 Gradle / JDK 配置
+gradle-daemon-jvm.properties
+
+# ---------- 签名与平台配置 ----------
+app/release/
+release/
+
+# ---------- 原生构建 ----------
+.cxx/
+.externalNativeBuild/
+.cxx
+.externalNativeBuild
+
+# ---------- IDE（Android Studio / IntelliJ / VS Code）----------
+*.iml
+.idea/
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.vscode/
+.settings/
+.fleet/
+
+# ---------- AI 编码工具生成物（内部草稿，不对外）----------
+.trae/
+.trae-html-share-packages/
+.kotlin/
+*.salive
+.claude/
+.cursor/
+
+# ---------- 内部开发草稿与演示文件 ----------
+/demo/
+/timerecording-docs/
+chart_fix_plan.html
+cross_day_bug_report.html
+cross_day_demo.html
+
+# ---------- 静态检查报告 ----------
+lint-results*
+lint-baseline.xml
+
+# ---------- 系统与编辑器杂项 ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*.tmp
+*.orig
+*.rej
+*.log
